@@ -44,7 +44,7 @@ jobs:
         username: ${{ secrets.VM_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd /saboor/Sir-Saboor
+          cd /CICD_S/Sir-Saboor
           git pull origin main
           source env/bin/activate
           pip install -r requirements.txt
