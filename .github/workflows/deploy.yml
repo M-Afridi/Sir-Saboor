@@ -1,0 +1,55 @@
+name: Django CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+   
+    steps:
+    - uses: actions/checkout@v3
+   
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+   
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+      # use your python requirements file path if in main directory then don’t make any changes.
+
+    - name: Run Tests
+      run: |
+        python manage.py test
+      # use your manage.py path, if in main directory then don’t make any changes.
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+   
+    steps:
+    - uses: actions/checkout@v3
+   
+    - name: Deploy to VM
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          cd /saboor/Sir-Saboor
+          # use your VPS path where your project is placed.
+          git pull origin main
+          source env/bin/activate
+          pip install -r requirements.txt
+          python manage.py makemigrations
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          sudo systemctl restart apache2
